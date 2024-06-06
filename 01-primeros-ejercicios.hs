@@ -1,3 +1,5 @@
+import Text.Show.Functions
+
 -- Ejemplos
 siguiente :: Integer -> Integer
 siguiente nro = nro + 1
