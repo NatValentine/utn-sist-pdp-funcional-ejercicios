@@ -78,13 +78,24 @@ sumarDos = \x -> x + 2
 -- Representamos las notas que sacó un alumno en dos parciales mediante un par (nota1, nota2).
 -- A partir de esto:
 -- 8.1. Definir la función esNotaBochazo, recibe un número y devuelve True si no llega a 6, False en caso contrario. No usar guardas. 
+esNotaBochazo :: Nota -> Bool
+esNotaBochazo = (< 6)
+
 -- 8.2. Definir la función aprobado, recibe un par e indica si una persona que se sacó esas notas aprueba. 
+aprobado :: (Nota, Nota) -> Bool
+aprobado (nota1, nota2) = not (esNotaBochazo nota1) && not (esNotaBochazo nota2)
+
 -- 8.3. Definir la función promocionado, que indicá si promocionó, para eso:
     -- Las notas tienen que sumar al menos 16
     -- Tiene que haberse sacado al menos un 8 en cada parcial 
+promocionado :: (Nota, Nota) -> Bool
+promocionado (nota1, nota2) = aprobado (nota1, nota2) && ((>= 8) nota1 || (>= 8) nota2)
+
 -- 8.4. Escribir una consulta que dado un par indica si aprobó el primer parcial, usando esNotaBochazo y composición.
     -- La consulta tiene que tener esta forma: (... algo ...) (5, 8)
-
+aproboPrimerParcial :: (Nota, Nota) -> Bool
+--aproboPrimerParcial (nota1, _) = not (esNotaBochazo nota1) --con pattern matching
+aproboPrimerParcial = not.esNotaBochazo.fst
 
 -- Ejercicio 9:
 -- Queremos calcular el sueldo de los empleados de nuestra empresa. Tenemos dos tipos de empleado:
@@ -95,7 +106,10 @@ sumarDos = \x -> x + 2
 -- Ejemplo:
 -- > sueldo (Jefe 50000 3 "Sonia")
 -- 65000
-
+data Empleado = Comun { sueldoBasico :: Integer, nombre :: String } | Jefe { sueldoBasico :: Integer, genteACargo :: Integer, nombre :: String }
+sueldo :: Empleado -> Integer
+sueldo (Comun basico _) = basico
+sueldo (Jefe basico subs _) = basico + subs * 5000
 
 -- Ejercicio 10:
 -- Se conocen estas bebidas:
