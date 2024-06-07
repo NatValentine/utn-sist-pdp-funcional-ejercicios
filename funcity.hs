@@ -1,5 +1,4 @@
- import Text.Show.Functions
-
+import Distribution.Simple.Setup (falseArg)
 -- Es el momento de modelar las ciudades del pintoresco país de Haskellandia, de las que nos interesa conocer:
     -- su nombre
     -- el año de fundación
@@ -227,7 +226,7 @@ ciudadMejorSegun criterio evento ciudad = criterio (aplicarEvento evento ciudad)
 -- Para un año, queremos aplicar sobre una ciudad solo los eventos que hagan que el costo de vida suba. Debe quedar como resultado la ciudad afectada con dichos eventos.
 aplicarEventosQueSubenCosto :: [Evento] -> Ciudad -> Ciudad
 aplicarEventosQueSubenCosto [] ciudad = ciudad
-aplicarEventosQueSubenCosto (ev:evs) ciudad | costoDeVida (aplicarEvento ev ciudad) > costoDeVida ciudad = aplicarEventosQueSubenCosto resto (aplicarEvento ev ciudad)
+aplicarEventosQueSubenCosto (ev:evs) ciudad | costoDeVida (aplicarEvento ev ciudad) > costoDeVida ciudad = aplicarEventosQueSubenCosto evs (aplicarEvento ev ciudad)
                                             | otherwise = aplicarEventosQueSubenCosto evs ciudad
 
 -- Ejemplos de invocación y respuesta:
@@ -267,12 +266,13 @@ aplicarEventosQueSubenValor (ev:evs) ciudad | valorCiudad (aplicarEvento ev ciud
 -- Punto 6: Funciones a la orden
 
 -- 6.1 Eventos ordenados
--- Dado un año y una ciudad, queremos saber si los eventos están ordenados en forma correcta, esto implica que el costo de vida al aplicar cada evento se va incrementando respecto al anterior evento. Debe haber al menos un evento para dicho año.
+-- Dado un año y una ciudad, queremos saber si los eventos están ordenados en forma correcta, 
+-- esto implica que el costo de vida al aplicar cada evento se va incrementando respecto al anterior evento. 
+-- Debe haber al menos un evento para dicho año.
 eventosOrdenados :: [Evento] -> Ciudad -> Bool
-eventosOrdenados [evento] ciudad = True
-eventosOrdenados (evento1:evento2:resto) ciudad =
-    costoDeVida (aplicarEvento evento2 (aplicarEvento evento1 ciudad)) > costoDeVida (aplicarEvento evento1 ciudad) 
-    && eventosOrdenados (evento2:resto) (aplicarEvento evento1 ciudad)
+eventosOrdenados [] _ = False
+eventosOrdenados [_] _ = True
+eventosOrdenados (ev1:ev2:evs) ciudad = costoDeVida (aplicarEvento ev2 (aplicarEvento ev1 ciudad)) > costoDeVida (aplicarEvento ev1 ciudad) && eventosOrdenados (ev2:evs) (aplicarEvento ev1 ciudad)
 
 -- Ejemplos de invocación y respuesta:
 -- Saber si el año 2022 (4.1) sobre Azul tiene los eventos ordenados
@@ -283,12 +283,13 @@ eventosOrdenados (evento1:evento2:resto) ciudad =
 
 
 -- 6.2 Ciudades ordenadas
--- Dado un evento y una lista de ciudades, queremos saber si esa lista está ordenada. Esto implica que el costo de vida al aplicar el evento sobre cada una de las ciudades queda en orden creciente. Debe haber al menos una ciudad en la lista.
-ciudadesOrdenadas :: (Ciudad -> Ciudad) -> [Ciudad] -> Bool
-ciudadesOrdenadas evento [ciudad] = True
-ciudadesOrdenadas evento (ciudad1:ciudad2:resto) =
-    costoDeVida (evento ciudad2) >= costoDeVida (evento ciudad1) 
-    && ciudadesOrdenadas evento (ciudad2:resto)
+-- Dado un evento y una lista de ciudades, queremos saber si esa lista está ordenada. 
+-- Esto implica que el costo de vida al aplicar el evento sobre cada una de las ciudades queda en orden creciente. 
+-- Debe haber al menos una ciudad en la lista.
+ciudadesOrdenadas :: Evento -> [Ciudad] -> Bool
+ciudadesOrdenadas _ [] = False
+ciudadesOrdenadas _ [_] = True
+ciudadesOrdenadas ev (ciudad1:ciudad2:ciudades) = costoDeVida (aplicarEvento ev ciudad2) >= costoDeVida (aplicarEvento ev ciudad1) && ciudadesOrdenadas ev (ciudad2:ciudades)
 
 -- Ejemplos de invocación y respuesta:
 -- Saber si para el evento remodelación al 10% de las ciudades Caleta Olivia, Nullish, Baradero y Azul está ordenada
@@ -299,40 +300,57 @@ ciudadesOrdenadas evento (ciudad1:ciudad2:resto) =
 
 
 -- 6.3 Años ordenados
--- Dada una lista de años y una ciudad, queremos saber si el costo de vida al aplicar todos los eventos de cada año sobre esa ciudad termina generando una serie de costos de vida ascendente (de menor a mayor). Debe haber al menos un año en la lista.
+-- Dada una lista de años y una ciudad, queremos saber si el costo de vida al aplicar todos los eventos de cada año 
+-- sobre esa ciudad termina generando una serie de costos de vida ascendente (de menor a mayor). Debe haber al menos un año en la lista.
 aniosOrdenados :: [Anio] -> Ciudad -> Bool
-aniosOrdenados [anio] ciudad = True
-aniosOrdenados (anio1:anio2:resto) ciudad =
-    costoDeVida (aplicarEventosAnio anio2 (aplicarEventosAnio anio1 ciudad)) > costoDeVida (aplicarEventosAnio anio1 ciudad) 
-    && aniosOrdenados (anio2:resto) (aplicarEventosAnio anio1 ciudad)
+aniosOrdenados [] _ = False
+aniosOrdenados [_] _ = True
+aniosOrdenados (anio1:anio2:anios) ciudad = costoDeVida (aplicarEventosAnio anio2 (aplicarEventosAnio anio1 ciudad)) > costoDeVida (aplicarEventosAnio anio1 ciudad) && aniosOrdenados (anio2:anios) (aplicarEventosAnio anio1 ciudad)
 
 aplicarEventosAnio :: Anio -> Ciudad -> Ciudad
 aplicarEventosAnio anio ciudad = foldl (flip aplicarEvento) ciudad(eventos anio)
 
 -- Tenemos los años:
     -- 2021 que tiene los siguientes eventos: crisis y agregar como atracción "playa"
+anio2021 :: Anio
+anio2021 = Anio 2021 [Evento "unaCrisis" crisis , Evento "vamosALaPlaya" (agregarAtraccion "playa")]
     -- 2022 que está definido en el punto 1.1 (tiene como eventos: una crisis, una remodelación de 5% y una reevaluación de 7 letras para las atracciones)
+anio2022 :: Anio
+anio2022 = Anio 2022 [Evento "unaCrisis" crisis, Evento "unaRemodelacion" (remodelacion 5), Evento "unaReevaluacion" (reevaluacion 7)]
     -- 2023 que tiene los siguientes eventos: crisis, agregar como atracción "parque", hacer una remodelación al 10%, y hacer una remodelación al 20%
+anio2023 :: Anio
+anio2023 = Anio 2023 [Evento "unaCrisis" crisis, Evento "habemusParque" (agregarAtraccion "parque"), Evento "unaRemodelacion" (remodelacion 10), Evento "unaRemodelacion" (remodelacion 20)]
 
--- Ejemplos de invocación y respuesta
--- Que los años 2021, 2022 y 2023 estén ordenados para Baradero
--- > Falso
+-- Ejemplos de invocación y respuesta:
+-- > aniosOrdenados [anio2021, anio2022, anio2023] baradero
+-- Falso
 
--- Que los años 2022, 2021 y 2023 estén ordenados para Baradero
--- >Verdadero, al aplicar los años en ese orden va subiendo el costo de vida.
+-- > aniosOrdenados [anio2022, anio2021, anio2023] baradero
+-- Verdadero, al aplicar los años en ese orden va subiendo el costo de vida.
 
 
 -- Punto 7: Al infinito, y más allá...
 -- 7.1. Eventos ordenados
--- Definir el año 2024 con una lista de eventos que inicia con una crisis, luego una reevaluación de atracciones con 7 letras y luego tiene una sucesión infinita de remodelaciones cuyo porcentaje de aumento en el costo de vida es 1 para la primera remodelación, 2 para la siguiente, y así hasta el infinito.
--- Puede haber un resultado posible para la función del punto 5.1 (eventos ordenados) para el año 2024? 
+-- Definir el año 2024 con una lista de eventos que inicia con una crisis, luego una reevaluación de atracciones con 7 letras y 
+-- luego tiene una sucesión infinita de remodelaciones cuyo porcentaje de aumento en el costo de vida es 1 para la primera remodelación, 
+-- 2 para la siguiente, y así hasta el infinito.
+anio2024 :: Anio
+anio2024 = Anio 2024 [Evento "unaCrisis" crisis, Evento "unaReevaluacion" (reevaluacion 7), Evento "unaRemodelacion" (remodelacion 1)] --ehhh
+-- Puede haber un resultado posible para la función del punto 6.1 (eventos ordenados) para el año 2024? 
 -- Justificarlo relacionándolo con conceptos vistos en la materia.
+    -- No, porque no se ocurre como terminar de definir el año ._.
 
 -- 7.2. Ciudades ordenadas
--- Puede haber un resultado posible para la función del punto 2.2 (ciudades ordenadas) para la lista "disco rayado"? 
--- Justificarlo relacionándolo con conceptos vistos en la materia.
 -- Definir una lista de ciudades "disco rayado" que comience con Azul y Nullish y luego cicle intercalando infinitamente entre Caleta Olivia y Baradero.
+listaDiscoRayado :: [Ciudad]
+listaDiscoRayado = [azul, nullish] ++ cycle [caletaOlivia, baradero]
+-- Puede haber un resultado posible para la función del punto 6.2 (ciudades ordenadas) para la lista "disco rayado"? 
+-- Justificarlo relacionándolo con conceptos vistos en la materia.
+    -- Si, me dio false
+    -- ghci> ciudadesOrdenadas (Evento "a" (remodelacion 5)) listaDiscoRayado 
+    -- False
 
 -- 7.2. Años ordenados
--- Puede haber un resultado posible para la función del punto 2.3 (años ordenados) para una lista infinita de años? 
+-- Puede haber un resultado posible para la función del punto 6.3 (años ordenados) para una lista infinita de años? 
 -- Justificarlo relacionándolo con conceptos vistos en la materia.
+    -- Como hago una lista infinita de años? :(
