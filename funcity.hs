@@ -335,10 +335,14 @@ anio2023 = Anio 2023 [Evento "unaCrisis" crisis, Evento "habemusParque" (agregar
 -- luego tiene una sucesión infinita de remodelaciones cuyo porcentaje de aumento en el costo de vida es 1 para la primera remodelación, 
 -- 2 para la siguiente, y así hasta el infinito.
 anio2024 :: Anio
-anio2024 = Anio 2024 [Evento "unaCrisis" crisis, Evento "unaReevaluacion" (reevaluacion 7), Evento "unaRemodelacion" (remodelacion 1)] --ehhh
+anio2024 = Anio 2024 [Evento "unaCrisis" crisis, Evento "unaReevaluacion" (reevaluacion 7), remodelacionInfinita]
+
+remodelacionInfinita :: [Evento]
+remodelacionInfinita = map (\n -> Evento ("Remodelacion " ++ show n ++ "%") (remodelacion n)) [1..]
+
 -- Puede haber un resultado posible para la función del punto 6.1 (eventos ordenados) para el año 2024? 
 -- Justificarlo relacionándolo con conceptos vistos en la materia.
-    -- No, porque no se ocurre como terminar de definir el año ._.
+    -- Me falta probarlo aaaa
 
 -- 7.2. Ciudades ordenadas
 -- Definir una lista de ciudades "disco rayado" que comience con Azul y Nullish y luego cicle intercalando infinitamente entre Caleta Olivia y Baradero.
@@ -351,6 +355,11 @@ listaDiscoRayado = [azul, nullish] ++ cycle [caletaOlivia, baradero]
     -- False
 
 -- 7.2. Años ordenados
+aplicarEventosAnio :: Anio -> Ciudad -> Ciudad
+aplicarEventosAnio anio ciudad = foldl (flip aplicarEvento) ciudad (eventos anio)
+
+aniosOrdenados :: [Anio] -> Ciudad -> Bool
+aniosOrdenados anios ciudad = listaOrdenada costoDeVida (aplicarTransformaciones aplicarEventosAnio anios ciudad)
 -- Puede haber un resultado posible para la función del punto 6.3 (años ordenados) para una lista infinita de años? 
 -- Justificarlo relacionándolo con conceptos vistos en la materia.
-    -- Como hago una lista infinita de años? :(
+    -- Me falta probarlo aaaa
